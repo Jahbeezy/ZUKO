@@ -2,12 +2,14 @@ const express = require('express');
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const table = require('console.table');
+require("dotenv").config();
 
 
+// local connection
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Thejman202$',
+    password: process.env.PASS,
     database: 'job_db'
 });
 
@@ -136,7 +138,7 @@ function addEmployee() {
                             )
                             if(answers.isManager === "yes"){
                                 connection.query(
-                                        `SELECT * FROM employee WHERE last_name = '${answers.last_name}'`, (err, res) =>{
+                                        `SELECT * FROM employee WHERE first_name = '${answers.first_name}' AND last_name = '${answers.last_name}'`, (err, res) =>{
                                           const manID = res.map((yi) =>{
                                             const manIdGrab = yi.id
                                               
@@ -264,10 +266,16 @@ function updateEmployee() {
                             type: "list",
                             message: "What would you like to update their role to?",
                             choices: titlesArray
+                        },
+                        {
+                            name: "mani",
+                            type: "list",
+                            message: "Is this a manager position?",
+                            choices: ["yes", "no"]
                         }
                     ])
                         .then(answers => {
-                            console.log(answers)
+                            //console.log(answers)
                             connection.query(
                                 `SELECT *  FROM role WHERE title = '${answers.role}'`, (err, results) => {
                                     const yo = results.map((ya) => {
@@ -276,6 +284,20 @@ function updateEmployee() {
                                         connection.query(
                                             `UPDATE employee SET role_id = ${idGrab} WHERE last_name = '${answers.ename}'`
                                         )
+                                        if(answers.isManager === "yes"){
+                                            connection.query(
+                                                    `SELECT * FROM employee WHERE first_name = '${answers.first_name}' AND last_name = '${answers.last_name}'`, (err, res) =>{
+                                                      const manID = res.map((yi) =>{
+                                                        const manIdGrab = yi.id
+                                                          
+                                                          connection.query(
+                                                              `UPDATE employee SET manager_id = ${manIdGrab} WHERE id = ${manIdGrab}`
+                                                              )
+                                                            })  
+                                                    }
+                                            )
+                                        }
+
 
                                     })
 
